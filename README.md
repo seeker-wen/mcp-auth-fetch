@@ -102,6 +102,28 @@ The power of this tool lies in its configuration file. Create a file named `.mcp
       }
     },
     {
+      "url_pattern": "auth-server.my-company.com",
+      "description": "OAuth2 Client Credentials",
+      "auth": {
+        "type": "oauth2",
+        "token_url": "https://auth-server.my-company.com/oauth/token",
+        "client_id": "${OAUTH_CLIENT_ID}",
+        "client_secret": "${OAUTH_CLIENT_SECRET}",
+        "scope": "api:read"
+      }
+    },
+    {
+      "url_pattern": "another-service.com",
+      "description": "OAuth2 with Refresh Token",
+      "auth": {
+        "type": "oauth2",
+        "token_url": "https://another-service.com/api/token",
+        "client_id": "${SERVICE_CLIENT_ID}",
+        "client_secret": "${SERVICE_CLIENT_SECRET}",
+        "refresh_token": "${SERVICE_REFRESH_TOKEN}"
+      }
+    },
+    {
       "url_pattern": "/api\\.special\\.com/",
       "description": "A special API requiring regex matching",
       "auth": {
@@ -127,11 +149,13 @@ The power of this tool lies in its configuration file. Create a file named `.mcp
   - `description` (optional): A human-readable description of the rule.
   - `enabled` (optional): Set to `false` to disable a rule. Defaults to `true`.
   - `auth`: An object describing the authentication method.
-    - `type`: One of `bearer`, `api_key`, `basic`, `cookie`.
+    - `type`: One of `bearer`, `api_key`, `basic`, `cookie`, `oauth2`, `function`.
     - **`bearer`**: `{ "type": "bearer", "token": "..." }`
     - **`api_key`**: `{ "type": "api_key", "in": "header"|"query", "key": "...", "value": "..." }`
     - **`basic`**: `{ "type": "basic", "username": "...", "password": "..." }`
     - **`cookie`**: `{ "type": "cookie", "cookies": { "key1": "value1", ... } }`
+    - **`oauth2`**: Handles OAuth2 client credentials and refresh token flows. `{ "type": "oauth2", "token_url": "...", "client_id": "...", "client_secret": "...", "scope": "(optional)", "refresh_token": "(optional)" }`
+    - **`function`**: For advanced dynamic credentials. Requires a `.mcp-auth-fetch.js` config file. The value is a function that returns headers or a bearer token. `{ "type": "function", "function": () => ({ "Authorization": "Bearer ..." }) }`
 
 ### Using Environment Variables
 

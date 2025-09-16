@@ -36,6 +36,14 @@ const AuthFunctionSchema = z.object({
     .function()
     .returns(z.union([z.record(z.string()), z.object({ token: z.string() })])),
 });
+const AuthOAuth2Schema = z.object({
+  type: z.literal("oauth2"),
+  token_url: z.string().url(),
+  client_id: z.string(),
+  client_secret: z.string(),
+  scope: z.string().optional(),
+  refresh_token: z.string().optional(),
+});
 
 const AuthSchema = z.union([
   AuthBearerSchema,
@@ -43,6 +51,7 @@ const AuthSchema = z.union([
   AuthBasicSchema,
   AuthCookieSchema,
   AuthFunctionSchema,
+  AuthOAuth2Schema,
 ]);
 
 export const AuthRuleSchema = z.object({
@@ -68,7 +77,68 @@ const ConfigSchema = z.object({
 // #region Type Definitions (derived from Zod)
 
 export type AuthRule = z.infer<typeof AuthRuleSchema>;
+type AuthOAuth2 = z.infer<typeof AuthOAuth2Schema>;
 type Config = z.infer<typeof ConfigSchema>;
+
+// #endregion
+
+// #region OAuth2 Token Cache
+
+const tokenCache: Record<
+  string,
+  { accessToken: string; expiresAt: number }
+> = {};
+
+async function getOAuth2Token(auth: AuthOAuth2): Promise<string> {
+  const cacheKey = `${auth.token_url}|${auth.client_id}`;
+  const cachedToken = tokenCache[cacheKey];
+
+  if (cachedToken && Date.now() < cachedToken.expiresAt) {
+    return cachedToken.accessToken;
+  }
+
+  const params = new URLSearchParams();
+  params.append("client_id", auth.client_id);
+  params.append("client_secret", auth.client_secret);
+  if (auth.scope) {
+    params.append("scope", auth.scope);
+  }
+
+  if (auth.refresh_token) {
+    params.append("grant_type", "refresh_token");
+    params.append("refresh_token", auth.refresh_token);
+  } else {
+    params.append("grant_type", "client_credentials");
+  }
+
+  const response = await fetch(auth.token_url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: params,
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(
+      `Failed to fetch OAuth2 token: ${response.status} ${response.statusText} - ${errorBody}`
+    );
+  }
+
+  const tokenData = (await response.json()) as {
+    access_token: string;
+    expires_in: number;
+  };
+
+  const expiresAt = Date.now() + (tokenData.expires_in - 60) * 1000; // 60s buffer
+  tokenCache[cacheKey] = {
+    accessToken: tokenData.access_token,
+    expiresAt,
+  };
+
+  return tokenData.access_token;
+}
 
 // #endregion
 
@@ -220,38 +290,46 @@ export async function fetch_url(
 
   if (rule) {
     const auth = rule.auth;
-    switch (auth.type) {
-      case "bearer":
-        finalHeaders["Authorization"] = `Bearer ${auth.token}`;
-        break;
-      case "api_key":
-        if (auth.in === "header") {
-          finalHeaders[auth.key] = auth.value;
-        } else {
-          const urlObj = new URL(url);
-          urlObj.searchParams.append(auth.key, auth.value);
-          url = urlObj.toString();
-        }
-        break;
-      case "basic":
-        const basicToken = Buffer.from(
-          `${auth.username}:${auth.password}`
-        ).toString("base64");
-        finalHeaders["Authorization"] = `Basic ${basicToken}`;
-        break;
-      case "cookie":
-        finalHeaders["Cookie"] = Object.entries(auth.cookies)
-          .map(([key, value]) => `${key}=${value}`)
-          .join("; ");
-        break;
-      case "function":
-        const authResult = auth.function();
-        if ("token" in authResult) {
-          finalHeaders["Authorization"] = `Bearer ${authResult.token}`;
-        } else {
-          Object.assign(finalHeaders, authResult);
-        }
-        break;
+    try {
+      switch (auth.type) {
+        case "bearer":
+          finalHeaders["Authorization"] = `Bearer ${auth.token}`;
+          break;
+        case "api_key":
+          if (auth.in === "header") {
+            finalHeaders[auth.key] = auth.value;
+          } else {
+            const urlObj = new URL(url);
+            urlObj.searchParams.append(auth.key, auth.value);
+            url = urlObj.toString();
+          }
+          break;
+        case "basic":
+          const basicToken = Buffer.from(
+            `${auth.username}:${auth.password}`
+          ).toString("base64");
+          finalHeaders["Authorization"] = `Basic ${basicToken}`;
+          break;
+        case "cookie":
+          finalHeaders["Cookie"] = Object.entries(auth.cookies)
+            .map(([key, value]) => `${key}=${value}`)
+            .join("; ");
+          break;
+        case "function":
+          const authResult = auth.function();
+          if ("token" in authResult) {
+            finalHeaders["Authorization"] = `Bearer ${authResult.token}`;
+          } else {
+            Object.assign(finalHeaders, authResult);
+          }
+          break;
+        case "oauth2":
+          const token = await getOAuth2Token(auth);
+          finalHeaders["Authorization"] = `Bearer ${token}`;
+          break;
+      }
+    } catch (error) {
+      return `Authentication failed: ${(error as Error).message}`;
     }
   }
 

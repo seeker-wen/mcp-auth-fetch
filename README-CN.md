@@ -102,7 +102,29 @@ npm install mcp-auth-fetch-pro
       }
     },
     {
-      "url_pattern": "/api\.special\.com/",
+      "url_pattern": "auth-server.my-company.com",
+      "description": "OAuth2 Client Credentials",
+      "auth": {
+        "type": "oauth2",
+        "token_url": "https://auth-server.my-company.com/oauth/token",
+        "client_id": "${OAUTH_CLIENT_ID}",
+        "client_secret": "${OAUTH_CLIENT_SECRET}",
+        "scope": "api:read"
+      }
+    },
+    {
+      "url_pattern": "another-service.com",
+      "description": "OAuth2 with Refresh Token",
+      "auth": {
+        "type": "oauth2",
+        "token_url": "https://another-service.com/api/token",
+        "client_id": "${SERVICE_CLIENT_ID}",
+        "client_secret": "${SERVICE_CLIENT_SECRET}",
+        "refresh_token": "${SERVICE_REFRESH_TOKEN}"
+      }
+    },
+    {
+      "url_pattern": "/api\\.special\\.com/",
       "description": "A special API requiring regex matching",
       "auth": {
         "type": "bearer",
@@ -127,11 +149,13 @@ npm install mcp-auth-fetch-pro
   - `description` (可选): 规则的人类可读描述。
   - `enabled` (可选): 设置为 `false` 以禁用规则。默认为 `true`。
   - `auth`: 描述身份验证方法的对象。
-    - `type`: `bearer`、`api_key`、`basic`、`cookie`之一。
+    - `type`: `bearer`、`api_key`、`basic`、`cookie`、`oauth2`、`function`之一。
     - **`bearer`**: `{ "type": "bearer", "token": "..." }`
     - **`api_key`**: `{ "type": "api_key", "in": "header"|"query", "key": "...", "value": "..." }`
     - **`basic`**: `{ "type": "basic", "username": "...", "password": "..." }`
     - **`cookie`**: `{ "type": "cookie", "cookies": { "key1": "value1", ... } }`
+    - **`oauth2`**: 处理 OAuth2 客户端凭据和刷新令牌流程。`{ "type": "oauth2", "token_url": "...", "client_id": "...", "client_secret": "...", "scope": "(可选)", "refresh_token": "(可选)" }`
+    - **`function`**: 用于高级动态凭据。需要一个 `.mcp-auth-fetch.js` 配置文件。该值是一个返回标头或 bearer 令牌的函数。`{ "type": "function", "function": () => ({ "Authorization": "Bearer ..." }) }`
 
 ### 使用环境变量
 

@@ -7,6 +7,13 @@
   "bin": {
     "mcp-auth-fetch": "dist/index.js"
   },
+  "files": [
+    "dist/index.js",
+    "dist/index.d.ts",
+    "README.md",
+    "README-CN.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
