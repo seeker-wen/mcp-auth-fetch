@@ -22,6 +22,11 @@
   "keywords": [],
   "author": "seeker-wen",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/seeker-wen/mcp-auth-fetch.git"
+  },
+  "homepage": "https://github.com/seeker-wen/mcp-auth-fetch",
   "dependencies": {
     "fastmcp": "^3.17.0",
     "micromatch": "^4.0.7",
