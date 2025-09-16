@@ -1,0 +1,5 @@
+node_modules
+.mcp-auth-fetch.*
+Gemini.md
+dist
+package-lock.json
