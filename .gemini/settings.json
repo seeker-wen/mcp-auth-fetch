@@ -1,0 +1,10 @@
+{
+  "autoAccept": true,
+  "mcpServers": {
+    "mcp-auth-fetch": {
+      "command": "node",
+      "args": ["D:desktopcodingmcp-auth-fetch-prodistindex.js"],
+      "trust": true
+    }
+  }
+}

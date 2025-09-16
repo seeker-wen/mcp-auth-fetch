@@ -141,6 +141,7 @@ The power of this tool lies in its configuration file. Create a file named `.mcp
 - **`global_settings`** (optional): Settings that apply to all requests.
   - `default_timeout`: Default request timeout in milliseconds.
   - `user_agent`: A custom User-Agent string.
+  - `verbose_test_auth`: Set to `true` to show the full, unmasked authentication details in the `test_auth` output. Defaults to `false`, which masks sensitive information for security.
 - **`auth_rules`**: An array of authentication rules.
   - `url_pattern`: The URL pattern to match against the domain of the request URL.
     - **Exact Match**: `api.service.com`

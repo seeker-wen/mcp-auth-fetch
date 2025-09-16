@@ -65,6 +65,7 @@ const GlobalSettingsSchema = z.object({
   default_timeout: z.number().optional(),
   max_retries: z.number().optional(),
   user_agent: z.string().optional(),
+  verbose_test_auth: z.boolean().optional(),
 });
 
 const ConfigSchema = z.object({
@@ -84,10 +85,8 @@ type Config = z.infer<typeof ConfigSchema>;
 
 // #region OAuth2 Token Cache
 
-const tokenCache: Record<
-  string,
-  { accessToken: string; expiresAt: number }
-> = {};
+const tokenCache: Record<string, { accessToken: string; expiresAt: number }> =
+  {};
 
 async function getOAuth2Token(auth: AuthOAuth2): Promise<string> {
   const cacheKey = `${auth.token_url}|${auth.client_id}`;
@@ -256,7 +255,7 @@ export function findMatchingRule(
 // #region MCP Tools
 
 const FetchUrlParamsSchema = z.object({
-  url: z.string().url(),
+  url: z.string(),
   method: z.string().default("GET"),
   headers: z.record(z.string()).optional(),
   body: z.string().optional(),
@@ -359,22 +358,67 @@ export async function fetch_url(
 }
 
 const TestAuthParamsSchema = z.object({
-  domain: z.string(),
+  url: z.string(),
 });
+
+/**
+ * Masks sensitive data within an authentication rule.
+ * @param rule The authentication rule to sanitize.
+ * @returns A sanitized authentication rule.
+ */
+function maskAuthRule(rule: AuthRule): AuthRule {
+  const newRule = JSON.parse(JSON.stringify(rule)); // Deep copy
+  switch (newRule.auth.type) {
+    case "bearer":
+      newRule.auth.token = "***MASKED***";
+      break;
+    case "api_key":
+      newRule.auth.value = "***MASKED***";
+      break;
+    case "basic":
+      newRule.auth.username = "***MASKED***";
+      newRule.auth.password = "***MASKED***";
+      break;
+    case "cookie":
+      for (const key in newRule.auth.cookies) {
+        newRule.auth.cookies[key] = "***MASKED***";
+      }
+      break;
+    case "oauth2":
+      newRule.auth.client_secret = "***MASKED***";
+      newRule.auth.refresh_token = "***MASKED***";
+      break;
+  }
+  return newRule;
+}
 
 /**
  * Tests the authentication configuration for a given domain.
  * @param domain The domain to test.
  * @returns The matching authentication rule, if any.
  */
-export function test_auth(domain: string): {
+export function test_auth(url: string): {
   rule: AuthRule | null;
+  configFile?: string | null;
   error?: string;
 } {
   try {
     const config = loadConfig();
-    const rule = findMatchingRule(`http://${domain}`, config.auth_rules);
-    return { rule: rule || null };
+    const configFile = findConfigFile();
+    const rule = findMatchingRule(url, config.auth_rules);
+
+    if (rule && !config.global_settings?.verbose_test_auth) {
+      const maskedRule = maskAuthRule(rule);
+      return {
+        rule: maskedRule,
+        configFile: configFile ? "config file has used" : null,
+      };
+    }
+
+    return {
+      rule: rule || null,
+      configFile: configFile || "No config file found",
+    };
   } catch (error) {
     return { rule: null, error: (error as Error).message };
   }
@@ -396,28 +440,37 @@ function startServer() {
     parameters: FetchUrlParamsSchema,
     execute: async (params) => {
       const { url, method, headers, body, timeout } = params;
-      return await fetch_url(url, method, headers, body, timeout);
+      const result = await fetch_url(url, method, headers, body, timeout);
+      return JSON.stringify(result);
     },
   });
 
   server.addTool({
     name: "test_auth",
-    description: "Tests the authentication configuration for a given domain.",
+    description: "Tests the authentication configuration for a given url.",
     parameters: TestAuthParamsSchema,
     execute: async (params) => {
-      const { domain } = params;
-      const result = test_auth(domain);
+      const { url } = params;
+      const result = test_auth(url);
       return JSON.stringify(result, null, 2);
     },
   });
 
-  server.start({
-    // transportType: "stdio",
-    transportType: "httpStream",
-    httpStream: {
-      port: 8080,
-    },
-  });
+  const type = process.argv[2] || "stdio";
+
+  if (type === "http") {
+    server.start({
+      transportType: "httpStream",
+      httpStream: {
+        port: process.env.PORT ? parseInt(process.env.PORT) : 8080,
+        host: process.env.HOST || "",
+      },
+    });
+  } else {
+    server.start({
+      transportType: "stdio",
+    });
+  }
 }
 
 if (require.main === module) {

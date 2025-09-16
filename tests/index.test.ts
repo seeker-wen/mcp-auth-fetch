@@ -186,16 +186,46 @@ describe('MCP Auth Fetch Pro', () => {
     const mockRules: AuthRule[] = [
         { url_pattern: 'api.github.com', auth: { type: 'bearer', token: 'github-token' }, description: 'GitHub Exact' },
         { url_pattern: '*.openai.com', auth: { type: 'bearer', token: 'openai-token' }, description: 'OpenAI Wildcard' },
+        { url_pattern: 'api.example.com', auth: { type: 'api_key', key: 'X-API-Key', value: 'example-key', in: 'header' }, description: 'API Key' },
     ];
+
+    it('should return the matching rule and mask sensitive data by default', () => {
+        vi.mocked(fs.existsSync).mockReturnValue(true);
+        const config = { auth_rules: mockRules };
+        vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(config));
+
+        const result = test_auth('https://api.github.com');
+        expect(result.rule).not.toBeNull();
+        expect(result.rule?.description).toBe('GitHub Exact');
+        // @ts-ignore
+        expect(result.rule?.auth.token).toBe('***MASKED***');
+    });
+
+    it('should return the unmasked rule when verbose_test_auth is true', () => {
+        vi.mocked(fs.existsSync).mockReturnValue(true);
+        const config = {
+            auth_rules: mockRules,
+            global_settings: {
+                verbose_test_auth: true
+            }
+        };
+        vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(config));
+
+        const result = test_auth('https://api.github.com');
+        expect(result.rule).not.toBeNull();
+        expect(result.rule?.description).toBe('GitHub Exact');
+        // @ts-ignore
+        expect(result.rule?.auth.token).toBe('github-token');
+    });
 
     it('should return the matching rule for a domain', () => {
         vi.mocked(fs.existsSync).mockReturnValue(true);
         const config = { auth_rules: mockRules };
         vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(config));
 
-        const result = test_auth('api.github.com');
+        const result = test_auth('https://api.openai.com');
         expect(result.rule).not.toBeNull();
-        expect(result.rule?.description).toBe('GitHub Exact');
+        expect(result.rule?.description).toBe('OpenAI Wildcard');
     });
   });
 

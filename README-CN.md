@@ -141,6 +141,7 @@ npm install mcp-auth-fetch-pro
 - **`global_settings`** (可选): 适用于所有请求的设置。
   - `default_timeout`: 默认请求超时（以毫秒为单位）。
   - `user_agent`: 自定义用户代理字符串。
+  - `verbose_test_auth`: 设置为 `true` 以在 `test_auth` 的输出中显示完整、未屏蔽的认证详情。默认为 `false`，此时会为了安全而屏蔽敏感信息。
 - **`auth_rules`**: 身份验证规则数组。
   - `url_pattern`: 与请求 URL 的域匹配的 URL 模式。
     - **精确匹配**: `api.service.com`

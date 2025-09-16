@@ -20,7 +20,7 @@
     "dev": "tsc --watch"
   },
   "keywords": [],
-  "author": "",
+  "author": "seeker-wen",
   "license": "ISC",
   "dependencies": {
     "fastmcp": "^3.17.0",
