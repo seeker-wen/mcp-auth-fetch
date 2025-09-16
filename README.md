@@ -1,6 +1,6 @@
 [中文](./README-CN.md)
 
-# MCP Auth Fetch Pro
+# MCP Auth Fetch
 
 `mcp-auth-fetch-pro` is a powerful and flexible package designed to simplify HTTP/HTTPS requests by automatically applying authentication credentials based on configurable rules.
 

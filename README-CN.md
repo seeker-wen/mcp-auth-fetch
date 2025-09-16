@@ -1,6 +1,6 @@
 [English](./README.md)
 
-# MCP Auth Fetch Pro
+# MCP Auth Fetch
 
 `mcp-auth-fetch-pro` 是一个功能强大且灵活的软件包，旨在通过根据可配置的规则自动应用身份验证凭据来简化 HTTP/HTTPS 请求。
 

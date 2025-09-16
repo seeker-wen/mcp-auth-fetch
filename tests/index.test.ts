@@ -15,7 +15,7 @@ vi.mock('node-fetch', async (importOriginal) => {
 });
 vi.mock('fs');
 
-describe('MCP Auth Fetch Pro', () => {
+describe('MCP Auth Fetch', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
