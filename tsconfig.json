@@ -1,13 +1,14 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "CommonJS",
     "strict": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./dist",
-    "declaration": true
-  }
+    "declaration": true,
+    "moduleResolution": "node"
+  },
+  "include": ["index.ts"],
+  "exclude": ["node_modules", "tests", "dist", "prepare-publish.js"]
 }

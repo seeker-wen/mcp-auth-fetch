@@ -1,28 +1,19 @@
 {
   "name": "mcp-auth-fetch",
-  "version": "1.0.1",
-  "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": {
-    "mcp-auth-fetch": "dist/index.js"
-  },
-  "files": [
-    "dist/index.js",
-    "dist/index.d.ts",
-    "dist/package.json",
-    "README.md",
-    "README-CN.md",
-    "LICENSE"
-  ],
+  "version": "1.1.0",
+  "description": "A library for authenticated fetch requests to MCP services.",
   "scripts": {
     "test": "vitest run",
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "clean": "node -e \"require('fs').rmSync('./dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc --module commonjs --outDir dist/cjs && tsc --module esnext --outDir dist/esm",
     "prepare:publish": "npm run build && node prepare-publish.js",
     "publish:pkg": "cd dist && npm publish"
   },
-  "keywords": [],
+  "keywords": [
+    "mcp",
+    "auth",
+    "fetch"
+  ],
   "author": "seeker-wen",
   "license": "ISC",
   "repository": {
