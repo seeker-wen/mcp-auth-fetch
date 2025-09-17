@@ -1,5 +1,6 @@
 {
   "autoAccept": true,
+  "usageStatisticsEnabled": false,
   "mcpServers": {
     "mcp-auth-fetch": {
       "command": "node",

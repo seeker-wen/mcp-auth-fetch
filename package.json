@@ -1,6 +1,6 @@
 {
   "name": "mcp-auth-fetch",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,6 +10,7 @@
   "files": [
     "dist/index.js",
     "dist/index.d.ts",
+    "dist/package.json",
     "README.md",
     "README-CN.md",
     "LICENSE"
@@ -17,7 +18,9 @@
   "scripts": {
     "test": "vitest run",
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepare:publish": "npm run build && node prepare-publish.js",
+    "publish:pkg": "cd dist && npm publish"
   },
   "keywords": [],
   "author": "seeker-wen",

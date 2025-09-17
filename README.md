@@ -2,7 +2,7 @@
 
 # MCP Auth Fetch
 
-`mcp-auth-fetch-pro` is a powerful and flexible package designed to simplify HTTP/HTTPS requests by automatically applying authentication credentials based on configurable rules.
+`mcp-auth-fetch` is a powerful and flexible package designed to simplify HTTP/HTTPS requests by automatically applying authentication credentials based on configurable rules.
 
 It acts as a seamless proxy for your fetch calls, finding the correct authentication method for a given URL, and attaching the necessary headers or parameters.
 
@@ -13,11 +13,6 @@ It acts as a seamless proxy for your fetch calls, finding the correct authentica
 - **Environment Variable Support**: Keep your secrets safe by referencing environment variables directly from the configuration file.
 - **Global Settings**: Configure global settings like user-agent and request timeouts.
 
-## Installation
-@
-```bash
-npm install mcp-auth-fetch-pro
-```
 
 ## Usage as an MCP Plugin
 
