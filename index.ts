@@ -7,7 +7,8 @@ import fs from "fs";
 import os from "os";
 import { z } from "zod";
 import { FastMCP } from "fastmcp";
-import packageJson from "./package.json";
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const packageJson = require("./package.json");
 
 // #region Zod Schema Definitions
 
@@ -285,6 +286,8 @@ export async function fetch_url(
 
   if (config.global_settings?.user_agent) {
     finalHeaders["User-Agent"] = config.global_settings.user_agent;
+  } else {
+    finalHeaders["User-Agent"] = "mcp-auth-fetch/" + packageJson.version;
   }
 
   if (rule) {
